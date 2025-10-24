@@ -23,13 +23,18 @@ def _match_globs(repo_root: pathlib.Path, patterns: List[str]) -> List[pathlib.P
     return files
 
 
-def discover_cp(task_dir: str) -> list[pathlib.Path]:
+def discover_cp(task_dir: str, repo_root: str = None) -> list[pathlib.Path]:
     base = pathlib.Path(task_dir)
     ctx = base / "context"
     cfg = ctx / "cp_paths.json"
     files: List[pathlib.Path] = []
-    # default search root = repo working directory (".")
-    repo_root = pathlib.Path(".")
+
+    # Use provided repo_root or derive from task_dir
+    if repo_root:
+        project_root = pathlib.Path(repo_root)
+    else:
+        # Derive from task_dir (go up 2 levels: tasks/<id>/ -> project root)
+        project_root = base.parent.parent
 
     if cfg.exists():
         try:
@@ -38,29 +43,29 @@ def discover_cp(task_dir: str) -> list[pathlib.Path]:
             if isinstance(raw, list):
                 patterns = [str(x) for x in raw if isinstance(x, str)]
                 if patterns:
-                    files.extend(_match_globs(repo_root, patterns))
+                    files.extend(_match_globs(project_root, patterns))
             # Case 2: object schema with "paths": [ ... ]
             elif isinstance(raw, dict):
                 paths = raw.get("paths", [])
                 # Allow strings or objects inside paths
                 for item in paths:
                     if isinstance(item, str):
-                        files.extend(_match_globs(repo_root, [item]))
+                        files.extend(_match_globs(project_root, [item]))
                     elif isinstance(item, dict):
                         if "file" in item and isinstance(item["file"], str):
-                            fp = repo_root / item["file"]
+                            fp = project_root / item["file"]
                             if fp.exists():
                                 files.append(fp)
                         # also accept "glob" or "pattern"
                         patt = item.get("glob") or item.get("pattern")
                         if isinstance(patt, str):
-                            files.extend(_match_globs(repo_root, [patt]))
+                            files.extend(_match_globs(project_root, [patt]))
             # else: ignore unknown formats
         except Exception:
             # Fall through to default if parsing fails
             pass
 
     if not files:
-        files = [p for p in repo_root.joinpath("src/core").rglob("*.py")]
+        files = [p for p in project_root.joinpath("src/core").rglob("*.py")]
 
     return _unique_sorted(files)

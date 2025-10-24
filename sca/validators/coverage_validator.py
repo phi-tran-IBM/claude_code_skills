@@ -93,8 +93,8 @@ def _resolve_coverage_paths(repo_root: Path, task_dir: Path) -> list[str]:
 
 def validate_coverage(tp) -> tuple[bool,str]:
     # Resolve coverage paths using cascading strategy
-    # tp.root is task_dir; repo_root is current working directory (validator runs from there)
-    repo_root = Path(".").resolve()
+    # Get repo root from task_dir structure (task_dir/../..)
+    repo_root = Path(tp.root).parent.parent.resolve()
     task_dir = tp.root
     cov_paths = _resolve_coverage_paths(repo_root, task_dir)
 

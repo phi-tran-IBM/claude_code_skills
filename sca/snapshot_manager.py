@@ -6,6 +6,26 @@ class SnapshotManager:
     def __init__(self, task_dir: str):
         self.tp = TaskPaths(task_dir); self.tp.ensure()
 
+    def _generate_compliance_status(self, header: Dict) -> None:
+        """Generate compliance_status.md with gate results and evidence links."""
+        gates = header.get("gates", {})
+        status_lines = ["# Compliance Status", "", "| Gate | Status | Evidence |", "|---|---|---|"]
+
+        evidence_map = {
+            "coverage_cp": "qa/coverage.xml",
+            "types_cp": "qa/mypy.txt",
+            "security": "qa/bandit.json, qa/secrets.json",
+            "docs_cp": "qa/interrogate.txt",
+            "complexity": "qa/lizard_report.txt",
+            "traceability": "artifacts/run_manifest.json"
+        }
+
+        for gate, status in gates.items():
+            evidence = evidence_map.get(gate, "qa/run_log.txt")
+            status_lines.append(f"| {gate} | {status} | {evidence} |")
+
+        (self.tp.artifacts / "compliance_status.md").write_text("\n".join(status_lines))
+
     def _claims_index(self):
         # Compact claims map from evidence.json if present
         ev = self.tp.context / "evidence.json"
@@ -45,6 +65,9 @@ class SnapshotManager:
             exec_sum.write_text("# Executive Summary [SUM]\n")
         with exec_sum.open("a", encoding="utf-8") as f:
             f.write(f"- Phase {phase_hint} saved at {time.ctime()}\n")
+
+        # Generate compliance status
+        self._generate_compliance_status(header)
 
         # claims_index.json
         (self.tp.context/"claims_index.json").write_text(json.dumps(self._claims_index(), indent=2))

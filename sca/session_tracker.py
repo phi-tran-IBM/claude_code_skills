@@ -27,11 +27,15 @@ class SessionTracker:
         self.artifacts_dir = self.task_dir / "artifacts"
         self.qa_dir = self.task_dir / "qa"
 
+        # Get project ID from path structure
+        self.project_root = self.task_dir.parent.parent
+        self.project_id = self.project_root.name
+
         # Ensure directories exist
         self.artifacts_dir.mkdir(parents=True, exist_ok=True)
         self.qa_dir.mkdir(parents=True, exist_ok=True)
 
-        # Session ID: persistent per task
+        # Session ID: persistent per task WITH project prefix
         self.session_id = self._load_or_create_session_id()
 
         # Run ID: unique per invocation
@@ -55,8 +59,8 @@ class SessionTracker:
             except Exception:
                 pass
 
-        # Create new session ID
-        session_id = str(uuid.uuid4())
+        # Create new session ID with project prefix
+        session_id = f"{self.project_id}-{uuid.uuid4()}"
         session_file.write_text(session_id, encoding="utf-8")
         return session_id
 
