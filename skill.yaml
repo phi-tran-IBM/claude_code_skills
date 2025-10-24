@@ -1,9 +1,12 @@
 name: sca-protocol
-version: 0.3.0
+version: 0.4.0
 description: >
-  Scientific Coding Agent protocol skill with AUTO modes, TDD guard,
+  Scientific Coding Agent protocol skill with MEA orchestration, AUTO modes, TDD guard,
   QA hard gates, snapshot save, memory sync, task management, and task-scoped IO.
 entrypoints:
+  - id: mea_cycle
+    command: ["pwsh", "-NoProfile", "-File", "commands/mea-cycle.ps1"]
+    description: Execute MEA cycle with Write→Validate→Fix→Repeat loop (use for code generation with auto-fix)
   - id: run_phase
     command: ["pwsh", "-NoProfile", "-File", "commands/run-phase.ps1"]
     description: Execute a workflow phase with validation and session tracking
@@ -28,7 +31,7 @@ entrypoints:
 permissions:
   filesystem:
     read: ["**/*"]
-    write: ["**/tasks/**/artifacts/**","**/tasks/**/qa/**","**/tasks/**/reports/**","**/tasks/**/context/**"]
+    write: ["**/tasks/**/artifacts/**","**/tasks/**/qa/**","**/tasks/**/reports/**","**/tasks/**/context/**","**/tasks/**/src/**","**/tasks/**/tests/**"]
   network: ["none"]
 environment:
   variables:
