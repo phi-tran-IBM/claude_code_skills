@@ -10,6 +10,8 @@ from .validators.interrogate_validator import validate_interrogate
 from .validators.secrets_validator import validate_secrets
 from .validators.sca_security_validator import validate_sca
 from .validators.memory_sync_validator import validate_memory_sync
+from .validators.placeholders_validator import validate_placeholders
+from .validators.ast_validator import validate_ast
 from .validators.traceability_validator import validate_traceability
 
 def run_validators(task_paths, include_context=True, include_cp=True, include_qa=True, include_memory=True, include_traceability=True, tracker=None):
@@ -21,7 +23,9 @@ def run_validators(task_paths, include_context=True, include_cp=True, include_qa
     if include_qa:      checks += [("pytest", validate_pytest), ("coverage", validate_coverage),
                                    ("mypy", validate_mypy), ("lizard", validate_lizard),
                                    ("interrogate", validate_interrogate), ("secrets", validate_secrets),
-                                   ("security", validate_sca)]
+                                   ("security", validate_sca),
+                                   ("placeholders", validate_placeholders),
+                                   ("ast", validate_ast)]
     if include_memory:  checks += [("memory_sync", validate_memory_sync)]
     if include_traceability: checks += [("traceability", validate_traceability)]
 

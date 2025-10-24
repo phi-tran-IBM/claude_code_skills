@@ -77,7 +77,7 @@ result = run_validators(
     include_cp=True,
     include_qa=True,
     include_memory=True,
-    include_traceability=False,  # Don't check traceability for validate-only
+    include_traceability=True,  # Always check traceability per protocol
     tracker=tracker
 )
 
