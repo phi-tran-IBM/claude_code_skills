@@ -1,0 +1,10 @@
+[
+  {
+    "claim": "...",
+    "source_type": "P1",
+    "url_or_doi": "...",
+    "retrieval_date": "YYYY-MM-DD",
+    "synthesized_finding": "≤50 words EBSE synthesis justifying the approach.",
+    "note_on_relevance": "why this supports our choice"
+  }
+]

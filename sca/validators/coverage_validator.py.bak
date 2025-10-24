@@ -1,0 +1,54 @@
+import xml.etree.ElementTree as ET
+from pathlib import Path
+from ..session_manager import run_cmd
+from ..execution_policy import ExecPolicy
+
+def _read_cp(tp):
+    p = tp.qa/"cp_list.txt"
+    if not p.exists(): return []
+    return [Path(s.strip()) for s in p.read_text().splitlines() if s.strip()]
+
+def validate_coverage(tp) -> tuple[bool,str]:
+    rc, out, err = run_cmd(["pytest","--cov=src","--cov-branch","--cov-report=xml","-q"], tp, ExecPolicy(), capture=True, allow_write=False)
+    (tp.qa/"coverage.txt").write_text((out or "") + (err or ""))
+    cov_xml = tp.qa/"coverage.xml"
+    if not cov_xml.exists():
+        return False, "coverage.xml missing"
+
+    cp_files = _read_cp(tp)
+    if not cp_files:
+        return False, "coverage: CP list missing (cp_list.txt)"
+
+    try:
+        tree = ET.parse(cov_xml); root = tree.getroot()
+    except Exception as e:
+        return False, f"coverage: invalid XML ({e})"
+
+    totals = {"l_cov":0,"l_tot":0,"b_cov":0,"b_tot":0}
+    cp_norm = set(str(p.resolve()).replace("\\","/") for p in cp_files)
+
+    for clazz in root.findall(".//class"):
+        fname = clazz.get("filename","")
+        fpath = str(Path(fname).resolve()).replace("\\","/")
+        if fpath not in cp_norm:
+            continue
+        lines_cov=0; lines_tot=0
+        # coverage.py XML: lines/line @hits; branch details optional
+        for line in clazz.findall(".//lines/line"):
+            lines_tot += 1
+            if int(line.get("hits","0"))>0:
+                lines_cov += 1
+        totals["l_cov"] += lines_cov
+        totals["l_tot"] += lines_tot
+        # branch rate is not reliable per-line; fallback to global if present
+    if totals["l_tot"] == 0:
+        return False, "coverage: no lines counted for CP files"
+
+    line_rate = totals["l_cov"]/totals["l_tot"]
+    # Approximate branch rate as global 'branch-rate' at root if available
+    br_attr = root.get("branch-rate")
+    branch_rate = float(br_attr) if br_attr is not None else line_rate
+
+    if line_rate < 0.95 or branch_rate < 0.95:
+        return False, f"coverage below threshold: line={line_rate:.3f}, branch={branch_rate:.3f}"
+    return True, f"coverage ok: line={line_rate:.3f}, branch={branch_rate:.3f}"

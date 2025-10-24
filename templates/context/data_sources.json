@@ -1,0 +1,19 @@
+{
+  "inputs": [
+    {
+      "name": "DATASET",
+      "path_or_url": "...",
+      "version": "v1.0",
+      "provenance": "source/system",
+      "access_method": "local|s3|http",
+      "sha256": "",
+      "rows": 0,
+      "cols": 0,
+      "licensing": "public",
+      "license_url": "",
+      "usage_restrictions": "",
+      "retention_days": 90,
+      "pii": false
+    }
+  ]
+}

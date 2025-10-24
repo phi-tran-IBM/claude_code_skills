@@ -1,0 +1,38 @@
+name: sca-protocol
+version: 0.3.0
+description: >
+  Scientific Coding Agent protocol skill with AUTO modes, TDD guard,
+  QA hard gates, snapshot save, memory sync, task management, and task-scoped IO.
+entrypoints:
+  - id: run_phase
+    command: ["pwsh", "-NoProfile", "-File", "commands/run-phase.ps1"]
+    description: Execute a workflow phase with validation and session tracking
+  - id: validate_only
+    command: ["pwsh", "-NoProfile", "-File", "commands/validate-only.ps1"]
+    description: Run validation gates without executing workflow phases
+  - id: snapshot_save
+    command: ["pwsh", "-NoProfile", "-File", "commands/snapshot-save.ps1"]
+    description: Save current task state and memory sync to artifacts
+  - id: get_task
+    command: ["pwsh", "-NoProfile", "-File", "commands/get-task-entrypoint.ps1"]
+    description: Get current task information with validation (use for "what is my current task", "current task status", "show current task")
+  - id: new_task
+    command: ["pwsh", "-NoProfile", "-File", "commands/new-task-entrypoint.ps1"]
+    description: Create a new task with directory structure and validation (use for "create new task", "new task for X", "start task")
+  - id: use_task
+    command: ["pwsh", "-NoProfile", "-File", "commands/use-task-entrypoint.ps1"]
+    description: Switch to a different task with validation (use for "switch to task X", "use task X", "change task")
+  - id: list_tasks
+    command: ["pwsh", "-NoProfile", "-File", "commands/list-tasks-entrypoint.ps1"]
+    description: List all tasks in current directory with metadata (use for "list tasks", "show tasks", "what tasks exist", "available tasks")
+permissions:
+  filesystem:
+    read: ["**/*"]
+    write: ["**/tasks/**/artifacts/**","**/tasks/**/qa/**","**/tasks/**/reports/**","**/tasks/**/context/**"]
+  network: ["none"]
+environment:
+  variables:
+    SCA_CANONICAL_PROTOCOL: "C:\\projects\\Work Projects\\.claude\\full_protocol.md"
+    PYTHONUNBUFFERED: "1"
+platforms:
+  - windows
